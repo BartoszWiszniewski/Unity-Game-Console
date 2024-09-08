@@ -140,6 +140,13 @@ namespace Console
         {
             Print($"> Error: <color=#{ColorUtility.ToHtmlStringRGB(style.errorColor)}>{text}</color>");
         }
+
+        [Command("test-vector", "Test vector", target: CommandTargetType.Single)]
+        public Vector3 Test
+        {
+            get;
+            set;
+        }
         
         public void ExecuteCurrentCommand()
         {
