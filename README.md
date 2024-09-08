@@ -59,7 +59,10 @@ The `GameConsole` class provides an in-game console for executing commands, disp
 4. **Autocomplete Commands**:
    - Press `Tab` to autocomplete the current command.
 
-5. **Customize Console Style**:
+5. **Commands hisotry**:
+   - Use the `Up` and `Down` arrow keys to navigate through the command history.
+
+6. **Customize Console Style**:
    - Modify the `GameConsoleStyle` object to change the appearance of the console.
 
 ## Creating Commands using CommandAttribute

@@ -60,6 +60,8 @@ namespace Console
         private TextMeshProUGUI suggestionTextField;
         
         private List<ICommand> _currentSuggestions = new List<ICommand>();
+        private List<string> _commandHistory = new List<string>();
+        private int _historyIndex = -1;
         
         private void Awake()
         {
@@ -99,6 +101,7 @@ namespace Console
         {
             commandInputTextField.onValueChanged.AddListener(OnCommandTextChanged);
             commandInputTextField.onSubmit.AddListener(ExecuteCommand);
+            _commandHistory.Clear();
             Cleanup();
         }
 
@@ -140,13 +143,6 @@ namespace Console
         {
             Print($"> Error: <color=#{ColorUtility.ToHtmlStringRGB(style.errorColor)}>{text}</color>");
         }
-
-        [Command("test-vector", "Test vector", target: CommandTargetType.Single)]
-        public Vector3 Test
-        {
-            get;
-            set;
-        }
         
         public void ExecuteCurrentCommand()
         {
@@ -176,9 +172,22 @@ namespace Console
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Tab))
+            if (consoleCanvas.gameObject.activeSelf)
             {
-                AutocompleteCommand();
+                
+                if (Input.GetKeyDown(KeyCode.Tab))
+                {
+                    AutocompleteCommand();
+                }
+                
+                if (Input.GetKeyDown(KeyCode.UpArrow))
+                {
+                    ShowPreviousCommand();
+                }
+                else if (Input.GetKeyDown(KeyCode.DownArrow))
+                {
+                    ShowNextCommand();
+                }
             }
             
             if(Input.GetKeyDown(openConsoleKey) && consoleCanvas != null)
@@ -194,6 +203,26 @@ namespace Console
             }
         }
 
+        private void ShowPreviousCommand()
+        {
+            if (_historyIndex > 0)
+            {
+                _historyIndex--;
+                commandInputTextField.text = _commandHistory[_historyIndex];
+                commandInputTextField.caretPosition = commandInputTextField.text.Length;
+            }
+        }
+
+        private void ShowNextCommand()
+        {
+            if (_historyIndex < _commandHistory.Count - 1)
+            {
+                _historyIndex++;
+                commandInputTextField.text = _commandHistory[_historyIndex];
+                commandInputTextField.caretPosition = commandInputTextField.text.Length;
+            }
+        }
+        
         private string GetCommandText(string command)
         {
             return Regex.Replace(command, @"^[\s\u200B]+|[\s\u200B]+$", string.Empty);
@@ -240,10 +269,20 @@ namespace Console
                 {
                     Print(result.ToString());
                 }
+
+                SaveCommand(command);
+                
                 return;
             }
             
             PrintError($"Failed to execute command {commandName} with arguments {string.Join(", ", commandArguments)}");
+        }
+        
+        private void SaveCommand(string command)
+        {
+            _commandHistory.RemoveAll(c => c == command);
+            _commandHistory.Add(command);
+            _historyIndex = _commandHistory.Count;
         }
         
         private void Cleanup()
