@@ -1,6 +1,10 @@
-﻿using Console.Attributes;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Console.Attributes;
+using Console.Converters;
+using Console.Suggestions;
 using Console.Types;
-using UnityEditor;
 using UnityEngine;
 
 namespace Console.Commands
@@ -18,7 +22,7 @@ namespace Console.Commands
         public static void Quit()
         {
 #if UNITY_EDITOR
-            EditorApplication.isPlaying = false;
+            UnityEditor.EditorApplication.isPlaying = false;
 #else
             Application.Quit();
 #endif
@@ -67,5 +71,94 @@ namespace Console.Commands
             get => Screen.fullScreen;
             set => Screen.fullScreen = value;
         }
+#if UNITY_EDITOR     
+        [Command("spawn-prefab", "Spawn a prefab works only in unity editor", "UnityEngine", CommandTargetType.Single)]
+        public static string SpawnPrefab(PrefabResource prefabResource)
+        {
+            try
+            {
+                var prefab = Resources.Load<GameObject>(prefabResource.Path);
+                var spawnedObject = Instantiate(prefab);
+                return spawnedObject.name;
+            }
+            catch
+            {
+                return "Prefab not found.";
+            }
+        }
+        
+        [Command("spawn-prefab", "Spawn a prefab at position works only in unity editor", "UnityEngine", CommandTargetType.Single)]
+        public static string SpawnPrefab(PrefabResource prefabResource, Vector3 position)
+        {
+            try
+            {
+                var prefab = Resources.Load<GameObject>(prefabResource.Path);
+                var spawnedObject = Instantiate(prefab, position, Quaternion.identity);
+                return spawnedObject.name;
+            }
+            catch
+            {
+                return "Prefab not found.";
+            }
+        }
+#endif
     }
+
+#if UNITY_EDITOR
+    public struct PrefabResource
+    {
+        public readonly string Path;
+
+        public PrefabResource(string path)
+        {
+            Path = path;
+        }
+        
+        public class PrefabResourceSuggestions : ISuggestion
+        {
+            public Type Type => typeof(PrefabResource);
+            private readonly List<string> _cachedGameObjects;
+
+            public PrefabResourceSuggestions()
+            {
+                var prefabGuids = UnityEditor.AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Resources" });
+
+                // Get the names of the prefabs without loading them
+                _cachedGameObjects = prefabGuids
+                    .Select(UnityEditor.AssetDatabase.GUIDToAssetPath)
+                    .Select(x => x.Replace("Assets/Resources/", "").Replace(".prefab", ""))
+                    .ToList();
+            }
+
+            public List<string> GetSuggestions(Type type, string input)
+            {
+                input = input.Trim('"');
+                if(string.IsNullOrWhiteSpace(input))
+                {
+                    return new List<string>();
+                }
+            
+                return _cachedGameObjects
+                    .Where(x => x.StartsWith(input, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(x => x)
+                    .ToList();
+            }
+        }
+        
+        public class PrefabResourceConverter : IValueConverter
+        {
+            public Type Type => typeof(PrefabResource);
+
+            public object Convert(string input)
+            {
+                return new PrefabResource(input);
+            }
+
+            public string Convert(object value)
+            {
+                return ((PrefabResource) value).Path;
+            }
+        }
+    }
+#endif
 }
