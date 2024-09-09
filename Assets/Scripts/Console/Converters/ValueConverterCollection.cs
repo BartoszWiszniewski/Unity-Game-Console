@@ -25,10 +25,9 @@ namespace Console.Converters
 
             foreach (var assembly in assemblies)
             {
-                var types = assembly.GetTypes();
+                var types = assembly.GetTypes().Where(IsValidType);
 
-                foreach (var type in types.Where(x =>
-                             typeof(IValueConverter).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract))
+                foreach (var type in types)
                 {
                     var instance = (IValueConverter)Activator.CreateInstance(type);
                     if (!_converters.TryAdd(instance.Type, instance))
@@ -39,6 +38,13 @@ namespace Console.Converters
             }
         }
 
+        private static bool IsValidType(Type type)
+        {
+            return typeof(IValueConverter).IsAssignableFrom(type) &&
+                   !type.IsInterface &&
+                   !type.IsAbstract;
+        }
+        
         public IValueConverter GetConverter(Type type)
         {
             _converters.TryGetValue(type, out var converter);
@@ -227,12 +233,14 @@ namespace Console.Converters
 
         public object Convert(string value)
         {
+            value = value.Trim('"');
             return value;
         }
 
         public string Convert(object value)
         {
-            return value.ToString();
+            var stringValue = (string)value;
+            return stringValue.Contains(" ") ? $"\"{stringValue}\"" : stringValue;
         }
     }
 
@@ -452,12 +460,15 @@ namespace Console.Converters
 
         public object Convert(string value)
         {
+            value = value.Trim('"');
             return GameObject.Find(value);
         }
 
         public string Convert(object value)
         {
-            return ((GameObject)value).name;
+            var name = ((GameObject)value).name;
+            
+            return name.Contains(" ") ? $"\"{name}\"" : name;
         }
     }
 }

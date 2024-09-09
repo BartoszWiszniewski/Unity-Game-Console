@@ -15,16 +15,22 @@ using UnityEngine.UI;
 namespace Console
 {
     [ExecuteAlways]
+    [RequireComponent(typeof(GameConsoleSuggestionController))]
     public class GameConsole : MonoBehaviour
     {
         private CommandCollection _commands;
+        public CommandCollection Commands => _commands;
+        
         private ValueConverterCollection _converters;
+        public ValueConverterCollection Converters => _converters;
 
         [SerializeField] 
         private Canvas consoleCanvas;
+        public bool IsVisible => consoleCanvas.gameObject.activeSelf;
         
         [SerializeField]
         private GameConsoleStyle style;
+        public GameConsoleStyle Style => style;
         
         [SerializeField]
         private Image backgroundImage;
@@ -37,7 +43,8 @@ namespace Console
         
         [SerializeField]
         private TMP_InputField commandInputTextField;
-        
+        public TMP_InputField CommandInputTextField => commandInputTextField;
+
         [SerializeField]
         private TextMeshProUGUI commandTextField;
 
@@ -53,31 +60,30 @@ namespace Console
         [SerializeField]
         private Graphic[] backgroundControlsGraphics;
         
-        [SerializeField]
-        private RectTransform suggestionContainer;
-        
-        [SerializeField]
-        private TextMeshProUGUI suggestionTextField;
-        
-        private List<ICommand> _currentSuggestions = new List<ICommand>();
         private List<string> _commandHistory = new List<string>();
         private int _historyIndex = -1;
+
+        private GameConsoleSuggestionController _gameConsoleSuggestionController;
         
         private void Awake()
         {
             textField.text = "";
             Cleanup();
+
+            if (_gameConsoleSuggestionController == null)
+            {
+                _gameConsoleSuggestionController = GetComponent<GameConsoleSuggestionController>();
+            }
+            
+            _commands = new CommandCollection();
+            _converters = new ValueConverterCollection();
         }
 
         private void Start()
         {
-            _commands = new CommandCollection();
-            _converters = new ValueConverterCollection();
-            
             backgroundImage.color = style.backgroundColor;
             
             textField.color = style.textColor;
-            suggestionTextField.color = style.textColor;
             textField.fontSize = style.textFontSize;
             
             commandTextField.color = style.inputTextColor;
@@ -99,7 +105,6 @@ namespace Console
 
         private void OnEnable()
         {
-            commandInputTextField.onValueChanged.AddListener(OnCommandTextChanged);
             commandInputTextField.onSubmit.AddListener(ExecuteCommand);
             _commandHistory.Clear();
             Cleanup();
@@ -107,7 +112,6 @@ namespace Console
 
         private void OnDisable()
         {
-            commandInputTextField.onValueChanged.RemoveListener(OnCommandTextChanged);
             commandInputTextField.onSubmit.RemoveListener(ExecuteCommand);
             Cleanup();
         }
@@ -174,12 +178,6 @@ namespace Console
         {
             if (consoleCanvas.gameObject.activeSelf)
             {
-                
-                if (Input.GetKeyDown(KeyCode.Tab))
-                {
-                    AutocompleteCommand();
-                }
-                
                 if (Input.GetKeyDown(KeyCode.UpArrow))
                 {
                     ShowPreviousCommand();
@@ -289,57 +287,6 @@ namespace Console
         {
             commandInputTextField.text = "";
             commandInputTextField.caretPosition = 0;
-            suggestionTextField.text = "";
-            suggestionContainer.gameObject.SetActive(false);
-            _currentSuggestions.Clear();
-        }
-        
-        private List<ICommand> GetCommands(string commandText)
-        {
-            var command = commandText.Split(' ').First();
-            return _commands.Values.Where(x => x.Command.StartsWith(command, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(x => x.Command)
-                .ThenBy(x => x.CommandArguments.Count)
-                .ToList();
-        }
-
-        private void OnCommandTextChanged(string value)
-        {
-            if(string.IsNullOrWhiteSpace(value))
-            {
-                suggestionTextField.text = "";
-                suggestionContainer.gameObject.SetActive(false);
-                _currentSuggestions.Clear();
-                return;
-            }
-            
-            _currentSuggestions = GetCommands(value);
-            if(!_currentSuggestions.Any())
-            {
-                suggestionTextField.text = "";
-                suggestionContainer.gameObject.SetActive(false);
-                return;
-            }
-            
-            var sb = new StringBuilder();
-            foreach (var command in _currentSuggestions)
-            {
-                sb.AppendLine($"{command.Command} {string.Join(", ", command.CommandArguments.Select(x => x.Name))} - {command.Description}");
-            }
-            
-            suggestionContainer.gameObject.SetActive(true);
-            suggestionTextField.text = sb.ToString();
-        }
-        
-        private void AutocompleteCommand()
-        {
-            if (_currentSuggestions.Any() && !string.IsNullOrWhiteSpace(commandInputTextField.text) && !commandInputTextField.text.Contains(" "))
-            {
-                var firstSuggestion = _currentSuggestions.First();
-                commandInputTextField.text = firstSuggestion.Command;
-                commandInputTextField.caretPosition = firstSuggestion.Command.Length;
-                OnCommandTextChanged(firstSuggestion.Command);
-            }
         }
     }
 }
