@@ -146,16 +146,6 @@ namespace Console
                 return (0, 0);
             }
             
-            // var insideQuotes = false;
-            // while (argumentTextIndex > 0 && (input[argumentTextIndex] != ' ' || insideQuotes))
-            // {
-            //     if (input[argumentTextIndex] == '"')
-            //     {
-            //         insideQuotes = !insideQuotes;
-            //     }
-            //     argumentTextIndex--;
-            // }
-            
             var insideQuotes = false;
             for (var i = 0; i <= argumentTextIndex; i++)
             {

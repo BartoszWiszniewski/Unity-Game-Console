@@ -5,6 +5,15 @@ The `GameConsole` class provides an in-game console for executing commands, disp
 
 ![Example Image](Assets/Textures/Example.png)
 
+## Features
+- Execute commands
+- Display logs
+- Suggestions
+- Autocomplete with `Tab`
+- History of used commands `Up` and `Down` arrows
+- Allows to run command on single or multiple objects
+- Commands can be applied on methods and properties
+
 ## Properties
 
 - **consoleCanvas**: The `Canvas` component that contains the console UI.
@@ -18,8 +27,7 @@ The `GameConsole` class provides an in-game console for executing commands, disp
 - **openConsoleKey**: The `KeyCode` used to toggle the console.
 - **foregroundControlsGraphics**: An array of `Graphic` components for the foreground controls.
 - **backgroundControlsGraphics**: An array of `Graphic` components for the background controls.
-- **suggestionContainer**: The `RectTransform` for the suggestion container.
-- **suggestionTextField**: The `TextMeshProUGUI` component for displaying command suggestions.
+- **captureLogsToConsole**: An array of `LogType` log types to print in console
 
 ## Methods
 
@@ -38,8 +46,6 @@ The `GameConsole` class provides an in-game console for executing commands, disp
 - **ExecuteCommand**: Executes a specified command.
 - **Cleanup**: Resets the input field and suggestion container.
 - **GetCommands**: Retrieves commands matching the input text.
-- **OnCommandTextChanged**: Updates command suggestions based on input text.
-- **AutocompleteCommand**: Autocompletes the current command based on suggestions.
 
 
 ## Usage
@@ -133,3 +139,112 @@ The following built-in converters are available:
 - BoundsValueConverter
 - EnumValueConverter
 - GameObjectValueConverter
+
+## Creating Suggestions
+The `SuggestionCollection` is a collection of various suggestion providers used in commands that implement the ISuggestion interface. Each suggestion provider is responsible for generating a list of suggestions based on a given input and type. 
+
+The `SuggestionCollection` automatically includes all suggestion providers that can be created with a parameterless constructor. If a suggestion provider requires parameters for its constructor, it should be added to the dictionary passed to the `SuggestionCollection` constructor. 
+In `GameConsoleSuggestionController` there is method `WaitForCommands` which creates  `SuggestionCollection` there you can add your custom implementations.
+
+### Example
+```
+_suggestionCollection = new SuggestionCollection(new Dictionary<Type, ISuggestion>
+{
+    {typeof(ICommand), new CommandSuggestion(gameConsole.Commands)}
+});
+```
+
+### Built-in Sugestions
+- LongSuggestion
+- FloatSuggestion
+- DoubleSuggestion
+- StringSuggestion
+- BoolSuggestion
+- DateTimeSuggestion
+- Vector2Suggestion
+- Vector3Suggestion
+- Vector4Suggestion
+- ColorSuggestion
+- Vector2IntSuggestion
+- Vector3IntSuggestion
+- GameObjectSuggestion
+- EnumSuggestion
+
+
+## Example of custom command with custom type as input
+### Command
+```
+[Command("spawn-prefab", "Spawn a prefab works only in unity editor", "UnityEngine", CommandTargetType.Single)]
+public static string SpawnPrefab(PrefabResource prefabResource, string name)
+{
+    try
+    {
+        var prefab = Resources.Load<GameObject>(prefabResource.Path);
+        var spawnedObject = Instantiate(prefab);
+        spawnedObject.name = name;
+        return spawnedObject.name;
+    }
+    catch
+    {
+        return "Prefab not found.";
+    }
+}
+```
+### Custom type
+```
+public struct PrefabResource
+{
+    public readonly string Path;
+
+    public PrefabResource(string path)
+    {
+        Path = path;
+    }
+    
+    public class PrefabResourceSuggestions : ISuggestion
+    {
+        public Type Type => typeof(PrefabResource);
+        private readonly List<string> _cachedGameObjects;
+
+        public PrefabResourceSuggestions()
+        {
+            var prefabGuids = UnityEditor.AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Resources" });
+
+            // Get the names of the prefabs without loading them
+            _cachedGameObjects = prefabGuids
+                .Select(UnityEditor.AssetDatabase.GUIDToAssetPath)
+                .Select(x => x.Replace("Assets/Resources/", "").Replace(".prefab", ""))
+                .ToList();
+        }
+
+        public List<string> GetSuggestions(Type type, string input)
+        {
+            input = input.Trim('"');
+            if(string.IsNullOrWhiteSpace(input))
+            {
+                return new List<string>();
+            }
+        
+            return _cachedGameObjects
+                .Where(x => x.StartsWith(input, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(x => x)
+                .ToList();
+        }
+    }
+    
+    public class PrefabResourceConverter : IValueConverter
+    {
+        public Type Type => typeof(PrefabResource);
+
+        public object Convert(string input)
+        {
+            return new PrefabResource(input);
+        }
+
+        public string Convert(object value)
+        {
+            return ((PrefabResource) value).Path;
+        }
+    }
+}
+```
