@@ -65,6 +65,16 @@ namespace Console
 
         private GameConsoleSuggestionController _gameConsoleSuggestionController;
         
+        [SerializeField]
+        private List<LogType> captureLogsToConsole = new List<LogType>
+        {
+            LogType.Error,
+            LogType.Exception,
+            LogType.Assert,
+            LogType.Warning,
+            LogType.Log
+        };
+        
         private void Awake()
         {
             textField.text = "";
@@ -105,6 +115,12 @@ namespace Console
 
         private void OnEnable()
         {
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+            
+            Application.logMessageReceived += CaptureLog;
             commandInputTextField.onSubmit.AddListener(ExecuteCommand);
             _commandHistory.Clear();
             Cleanup();
@@ -112,8 +128,46 @@ namespace Console
 
         private void OnDisable()
         {
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+            
             commandInputTextField.onSubmit.RemoveListener(ExecuteCommand);
             Cleanup();
+            Application.logMessageReceived -= CaptureLog;
+        }
+
+        private void CaptureLog(string logString, string stackTrace, LogType type)
+        {
+            if (!captureLogsToConsole.Contains(type))
+            {
+                return;
+            }
+            
+            var color = Color.white;
+            switch (type)
+            {
+                case LogType.Error:
+                case LogType.Exception:
+                    color = style.errorColor;
+                    logString = $"> <b>Error</b>: {logString + "\n" + stackTrace}";
+                    break;
+                case LogType.Assert:
+                    color = style.assertColor;
+                    logString = $"> <b>Assert</b>: {logString + "\n" + stackTrace}";
+                    break;
+                case LogType.Warning:
+                    color = style.warningColor;
+                    logString = $"> <b>Warning</b>: {logString + "\n" + stackTrace}";
+                    break;
+                case LogType.Log:
+                    color = style.logColor;
+                    logString = $"> <b>Log</b>: {logString}";
+                    break;
+            }
+            
+            Print(logString, color);
         }
         
         [Command("list-commands", "Get all commands", target: CommandTargetType.Single)]
@@ -291,6 +345,24 @@ namespace Console
 
         [Command("TestEnum", "Test enum", group: "Test", target: CommandTargetType.Single)]
         public TestEnum TestEnum { get; set; }
+
+        [Command("TestLog", "Test log", group: "Test", target: CommandTargetType.Single)]
+        public void TestLog()
+        {
+            Debug.Log("Test log");
+        }
+        
+        [Command("TestError", "Test error", group: "Test", target: CommandTargetType.Single)]
+        public void TestError()
+        {
+            Debug.LogError("Test error");
+        }
+        
+        [Command("TestWarning", "Test warning", group: "Test", target: CommandTargetType.Single)]
+        public void TestWarning()
+        {
+            Debug.LogWarning("Test warning");
+        }
     }
 
     public enum TestEnum

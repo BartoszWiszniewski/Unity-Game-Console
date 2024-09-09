@@ -19,8 +19,10 @@ MonoBehaviour:
   inputTextColor: {r: 0.69411767, g: 1, b: 0.003921569, a: 1}
   inputBackgroundColor: {r: 0, g: 0, b: 0, a: 0.78431374}
   inputTextFontSize: 16
-  errorColor: {r: 1, g: 0, b: 0, a: 1}
+  errorColor: {r: 1, g: 0.2971698, b: 0.29803923, a: 1}
   warningColor: {r: 1, g: 0.90022033, b: 0, a: 1}
   infoColor: {r: 0, g: 0.9087887, b: 1, a: 1}
+  assertColor: {r: 1, g: 0.29803923, b: 0.29803923, a: 1}
+  logColor: {r: 0, g: 0.5, b: 1, a: 1}
   controlColor: {r: 1, g: 0.5686275, b: 0, a: 1}
   controlBackground: {r: 0.2, g: 0.2, b: 0.2, a: 0.3137255}
