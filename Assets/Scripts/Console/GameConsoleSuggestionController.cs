@@ -146,15 +146,43 @@ namespace Console
                 return (0, 0);
             }
             
-            while (argumentTextIndex > 0 && input[argumentTextIndex] != ' ')
+            // var insideQuotes = false;
+            // while (argumentTextIndex > 0 && (input[argumentTextIndex] != ' ' || insideQuotes))
+            // {
+            //     if (input[argumentTextIndex] == '"')
+            //     {
+            //         insideQuotes = !insideQuotes;
+            //     }
+            //     argumentTextIndex--;
+            // }
+            
+            var insideQuotes = false;
+            for (var i = 0; i <= argumentTextIndex; i++)
             {
+                if (input[i] == '"')
+                {
+                    insideQuotes = !insideQuotes;
+                }
+            }
+
+            while (argumentTextIndex > 0 && (input[argumentTextIndex] != ' ' || insideQuotes))
+            {
+                if (input[argumentTextIndex] == '"')
+                {
+                    insideQuotes = !insideQuotes;
+                }
                 argumentTextIndex--;
             }
 
             var argumentIndex = 0;
+            insideQuotes = false;
             for (var i = 0; i <= argumentTextIndex; i++)
             {
-                if (input[i] == ' ')
+                if (input[i] == '"')
+                {
+                    insideQuotes = !insideQuotes;
+                }
+                if (input[i] == ' ' && !insideQuotes)
                 {
                     argumentIndex++;
                 }

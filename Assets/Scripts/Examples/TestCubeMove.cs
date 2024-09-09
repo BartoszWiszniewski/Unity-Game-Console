@@ -24,22 +24,49 @@ namespace Examples
             set => speed = value;
         }
         
-        [Command("SetCubeSpeed", "Set target cube speed", group: "Cube", target: CommandTargetType.Single)]
-        public static void SetTargetCubeSpeed(GameObject gameObject, float speed)
+        [Command("CubesSetSpeed", "Set target cube speed", group: "Cube", target: CommandTargetType.Single)]
+        public static void SetTargetCubeSpeed(GameObject cube, float speed)
         {
-            if (gameObject == null)
+            if (cube == null)
             {
                 Debug.LogError("GameObject is null");
             }
             
-            var cubeMove = gameObject.GetComponent<TestCubeMove>();
+            var cubeMove = cube.GetComponent<TestCubeMove>();
             if (cubeMove != null)
             {
                 cubeMove.speed = speed;
             }
             else
             {
-                Debug.LogError($"GameObject {gameObject.name} does not have TestCubeMove component");
+                Debug.LogError($"GameObject {cube.name} does not have TestCubeMove component");
+            }
+        }
+        
+        [Command("CubeAddWayPoint", "Add waypoint to cube", group: "Cube", target: CommandTargetType.Single)]
+        public static void AddWayPoint(GameObject cube, Vector3 position)
+        {
+            if (cube == null)
+            {
+                Debug.LogError("GameObject is null");
+            }
+            
+            var cubeMove = cube.GetComponent<TestCubeMove>();
+            if (cubeMove != null)
+            {
+                var newWaypoint = new GameObject($"Waypoint{cubeMove.waypoints.Count}")
+                {
+                    transform =
+                    {
+                        position = position
+                    }
+                };
+                newWaypoint.transform.SetParent(cube.transform.parent);
+                cubeMove.waypoints.Add(newWaypoint.transform);
+            }
+            else
+            {
+                Debug.LogError($"GameObject {cube.name} does not have TestCubeMove component");
             }
         }
 
