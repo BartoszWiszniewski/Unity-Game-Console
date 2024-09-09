@@ -54,7 +54,13 @@ namespace Console.Suggestions
         
         public bool TryGetSuggestion(Type type, string input, out List<string> suggestions)
         {
-            if (_suggestions.TryGetValue(type, out var suggestion))
+            var targetType = type;
+            if (targetType.IsEnum)
+            {
+                targetType = typeof(Enum);
+            }
+            
+            if (_suggestions.TryGetValue(targetType, out var suggestion))
             {
                 suggestions = suggestion.GetSuggestions(type, input);
                 return true;

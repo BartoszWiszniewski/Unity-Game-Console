@@ -47,7 +47,13 @@ namespace Console.Converters
         
         public IValueConverter GetConverter(Type type)
         {
-            _converters.TryGetValue(type, out var converter);
+            var targetType = type;
+            if (targetType.IsEnum)
+            {
+                targetType = typeof(Enum);
+            }
+            
+            _converters.TryGetValue(targetType, out var converter);
             if (converter == null)
             {
                 Debug.LogError($"Failed to find value converter for type {type}");
@@ -102,6 +108,13 @@ namespace Console.Converters
 
             try
             {
+                if(type.IsEnum)
+                {
+                    value = $"{type.FullName}:{value}";
+                    //result = Enum.Parse(type, value);
+                    //return true;
+                }
+                
                 result = converter.Convert(value);
                 return true;
             }
@@ -445,7 +458,22 @@ namespace Console.Converters
 
         public object Convert(string value)
         {
-            return Enum.Parse(Type, value);
+            var parts = value.Split(':');
+            if (parts.Length != 2)
+            {
+                throw new ArgumentException("Input value must be in the format 'Type:EnumValue'");
+            }
+
+            var typeName = parts[0].Trim();
+            var enumValue = parts[1].Trim();
+
+            var type = Type.GetType(typeName);
+            if (type == null || !type.IsEnum)
+            {
+                throw new ArgumentException($"Type '{typeName}' is not a valid enum type");
+            }
+
+            return Enum.Parse(type, enumValue);
         }
 
         public string Convert(object value)

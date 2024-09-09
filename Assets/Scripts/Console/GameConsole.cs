@@ -288,5 +288,15 @@ namespace Console
             commandInputTextField.text = "";
             commandInputTextField.caretPosition = 0;
         }
+
+        [Command("TestEnum", "Test enum", group: "Test", target: CommandTargetType.Single)]
+        public TestEnum TestEnum { get; set; }
+    }
+
+    public enum TestEnum
+    {
+        Value1,
+        Value2,
+        Value3
     }
 }

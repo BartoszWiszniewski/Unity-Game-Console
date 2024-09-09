@@ -124,6 +124,7 @@ namespace Console
                 var argumentType = bestCommand.CommandArguments[argumentIndex].Type;
                 
                 var argument = argumentIndex >= data.Args.Length ? string.Empty : data.Args[argumentIndex];
+                
                 if(_suggestionCollection.TryGetSuggestion(argumentType, argument, out var suggestions))
                 {
                     suggestionTextField.text = string.Join("\n", suggestions);
