@@ -20,6 +20,7 @@ namespace Console.Suggestions
             return _commandCollection.Values.Where(x => x.Command.StartsWith(input, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(x => x.Command)
                 .ThenBy(x => x.CommandArguments.Count)
+                .ThenBy(x => x.Command)
                 .Select(command => $"{command.Command} {string.Join(" ", command.CommandArguments.Select(argument => argument.Name))} - {command.Description}")
                 .ToList();
         }

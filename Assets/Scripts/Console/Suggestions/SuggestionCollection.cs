@@ -288,11 +288,6 @@ namespace Console.Suggestions
                 _cachedGameObjects.Clear();
                 return new List<string>();
             }
-            
-            if (_cachedInput == input)
-            {
-                return _cachedGameObjects;
-            }
 
             _cachedInput = input;
             if (!_cachedGameObjects.Any())

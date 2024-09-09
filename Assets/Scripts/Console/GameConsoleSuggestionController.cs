@@ -168,7 +168,8 @@ namespace Console
             return gameConsole.Commands.GetCommands(command)
                 .Where(x => x.CommandArguments.Count >= argumentsCount)
                 .OrderBy(x => Math.Abs(x.CommandArguments.Count - argumentsCount)) // Order by the closest match in terms of parameter count
-                .ThenBy(x => x.CommandArguments.Count); // If same difference, prefer commands with fewer total arguments
+                .ThenBy(x => x.CommandArguments.Count)
+                .ThenBy(x => x.Command); // If same difference, prefer commands with fewer total arguments
         }
         
         private ICommand BestFitCommand(string command, int argumentsCount)
@@ -182,6 +183,7 @@ namespace Console
                 .Where(x => x.CommandArguments.Count >= argumentsCount)
                 .OrderBy(x => Math.Abs(x.CommandArguments.Count - argumentsCount)) // Order by the closest match in terms of parameter count
                 .ThenBy(x => x.CommandArguments.Count) // If same difference, prefer commands with fewer total arguments
+                .ThenBy(x => x.Command)
                 .FirstOrDefault();
         }
         
