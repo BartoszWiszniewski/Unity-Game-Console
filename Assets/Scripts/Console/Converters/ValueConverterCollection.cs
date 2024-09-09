@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Console.Converters
@@ -10,22 +11,28 @@ namespace Console.Converters
     {
         private readonly Dictionary<Type, IValueConverter> _converters = new();
 
-        public ValueConverterCollection()
+        public ValueConverterCollection(Dictionary<Type, IValueConverter> customConverters = null)
         {
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
-            LoadAllValueConverters();
+            LoadAllValueConverters(customConverters);
         }
 
-        private void LoadAllValueConverters()
+        private void LoadAllValueConverters(Dictionary<Type, IValueConverter> customConverters)
         {
             _converters.Clear();
-
+            if (customConverters != null)
+            {
+                _converters.AddRange(customConverters);
+            }
+            
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
             foreach (var assembly in assemblies)
             {
-                var types = assembly.GetTypes().Where(IsValidType);
+                var types = assembly.GetTypes()
+                    .Where(type => IsValidType(type) && !_converters.ContainsKey(type))
+                    .ToArray();
 
                 foreach (var type in types)
                 {
