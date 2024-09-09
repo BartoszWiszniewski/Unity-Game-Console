@@ -73,12 +73,13 @@ namespace Console.Commands
         }
 #if UNITY_EDITOR     
         [Command("spawn-prefab", "Spawn a prefab works only in unity editor", "UnityEngine", CommandTargetType.Single)]
-        public static string SpawnPrefab(PrefabResource prefabResource)
+        public static string SpawnPrefab(PrefabResource prefabResource, string name)
         {
             try
             {
                 var prefab = Resources.Load<GameObject>(prefabResource.Path);
                 var spawnedObject = Instantiate(prefab);
+                spawnedObject.name = name;
                 return spawnedObject.name;
             }
             catch
@@ -88,12 +89,13 @@ namespace Console.Commands
         }
         
         [Command("spawn-prefab", "Spawn a prefab at position works only in unity editor", "UnityEngine", CommandTargetType.Single)]
-        public static string SpawnPrefab(PrefabResource prefabResource, Vector3 position)
+        public static string SpawnPrefab(PrefabResource prefabResource, string name, Vector3 position)
         {
             try
             {
                 var prefab = Resources.Load<GameObject>(prefabResource.Path);
                 var spawnedObject = Instantiate(prefab, position, Quaternion.identity);
+                spawnedObject.name = name;
                 return spawnedObject.name;
             }
             catch

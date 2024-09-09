@@ -298,6 +298,7 @@ namespace Console.Suggestions
                 .Where(x => x.StartsWith(input, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(x => x)
                 .Select(GetGameObjectName)
+                .Distinct()
                 .ToList();
         }
         
