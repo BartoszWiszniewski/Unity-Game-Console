@@ -288,7 +288,6 @@ namespace Console.Suggestions
                 _cachedGameObjects.Clear();
                 return new List<string>();
             }
-
             _cachedInput = input;
             if (!_cachedGameObjects.Any())
             {
@@ -298,7 +297,13 @@ namespace Console.Suggestions
             return _cachedGameObjects
                 .Where(x => x.StartsWith(input, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(x => x)
+                .Select(GetGameObjectName)
                 .ToList();
+        }
+        
+        private string GetGameObjectName(string name)
+        {
+            return name.Contains(" ") ? $"\"{name}\"" : name;
         }
     }
 }

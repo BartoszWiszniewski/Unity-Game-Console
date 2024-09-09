@@ -292,26 +292,24 @@ namespace Console
             
             command = GetCommandText(command);
             Print($"> <color=#{ColorUtility.ToHtmlStringRGB(style.infoColor)}>{command}</color>");
+
+            var commandParts = GameConsoleInputProcessor.ProcessInput(command);
             
-            var commandParts = command.Split(' ');
-            var commandName = commandParts[0];
-            var commandArguments = commandParts.Skip(1).ToArray();
-            
-            var commands = _commands.GetCommands(commandName);
+            var commands = _commands.GetCommands(commandParts.Command);
             if (commands.Count == 0)
             {
-                PrintError("Command not found: " + commandName);
+                PrintError("Command not found: " + commandParts.Command);
                 return;
             }
             
             var commandsToExecute = commands
-                .OrderBy(x => Math.Abs(x.CommandArguments.Count - commandArguments.Length)) // Order by the closest match in terms of parameter count
+                .OrderBy(x => Math.Abs(x.CommandArguments.Count - commandParts.Args.Length)) // Order by the closest match in terms of parameter count
                 .ThenBy(x => x.CommandArguments.Count) // If same difference, prefer commands with fewer total arguments
                 .ToArray();
             
             foreach (var commandToExecute in commandsToExecute)
             {
-                if (!_converters.TryConvertArguments(commandArguments, commandToExecute.ParameterTypes, out var convertedArguments))
+                if (!_converters.TryConvertArguments(commandParts.Args, commandToExecute.ParameterTypes, out var convertedArguments))
                 {
                     continue;
                 }
@@ -327,7 +325,7 @@ namespace Console
                 return;
             }
             
-            PrintError($"Failed to execute command {commandName} with arguments {string.Join(", ", commandArguments)}");
+            PrintError($"Failed to execute command {commandParts.Command} with arguments {string.Join(", ", commandParts.Args)}");
         }
         
         private void SaveCommand(string command)
